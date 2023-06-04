@@ -79,7 +79,7 @@ def update_action(run_id: str, message: str, status: Union[Literal['FAILURE'], L
 
     return response.status_code
 
-def update_entity(blueprint: str, entity_id: str, body: dict):
+def update_entity(blueprint: str, entity_id: str, body: dict, run_id: str):
     """
     Updates an entity in Port
     """
@@ -90,7 +90,7 @@ def update_entity(blueprint: str, entity_id: str, body: dict):
     }
 
     logger.info(f"update action with: {json.dumps(body)}")
-    response = requests.patch(f"{settings.PORT_API_URL}/blueprints/{blueprint}/entities/{entity_id}", json=body, headers=headers)
+    response = requests.patch(f"{settings.PORT_API_URL}/blueprints/{blueprint}/entities/{entity_id}?run_id={run_id}", json=body, headers=headers)
     logger.info(f"update entity response - status: {response.status_code}, body: {json.dumps(response.json())}")
 
     return response

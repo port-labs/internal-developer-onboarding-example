@@ -1,8 +1,6 @@
 import logging
 from fastapi import APIRouter, Depends
 
-# from mappings import ACTION_ID_TO_CLASS_MAPPING
-# from api.deps import verify_webhook
 from app.core import port
 from app.core.config import settings
 from app.schemas.webhook_schema import Webhook
@@ -12,14 +10,15 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-ACTION_ID_TO_CLASS_MAPPING = {}
-
 @router.post("/service", dependencies=None)
 async def handle_create_service_webhook(webhook: Webhook):
     logger.info(f"Webhook body: {webhook}")
+
     action_type = webhook.payload['action']['trigger']
     action_identifier = webhook.payload['action']['identifier']
     properties = webhook.payload['properties']
+    integrations = properties['integrations']
+
     run_id = webhook.context.runId
 
     if action_type == 'CREATE':
@@ -41,36 +40,39 @@ async def handle_create_service_webhook(webhook: Webhook):
         if action_status == 'SUCCESS':
             mesh_team_entity_identifier = create_response.json()["entity"]["identifier"]
 
-            ## Update the mesh service relation
-            for service in properties["services"]:
-                existing_mesh_relations = port.get_entity(blueprint=settings.PORT_REPOSITORY_BLUEPRINT, entity_id=service)["relations"]["mesh"]
-                existing_mesh_relations.append(mesh_team_entity_identifier)
-                entity_data = {
-                    "properties": {
-                        "type": "service"
-                    },
-                    "relations": {
-                        "mesh": existing_mesh_relations
-                    }
-                }
-                port.update_entity(blueprint=settings.PORT_REPOSITORY_BLUEPRINT, entity_id=service, body=entity_data)
+            relation_items = ["services", "libraries"]
+            relation_map = {"services": "service", "libraries": "library"}
 
-            ## Update the mesh library relation
-            for library in properties["libraries"]:
-                existing_mesh_relations = port.get_entity(blueprint=settings.PORT_REPOSITORY_BLUEPRINT, entity_id=library)["relations"]["mesh"]
-                existing_mesh_relations.append(mesh_team_entity_identifier)
+            for item_type in relation_items:
+                if item_type in properties.keys():
+                    
+                    ## Add this new team to all selected services and libraries repository
+                    for entity_identifier in properties[item_type]:
+                        repository_entity_data = port.get_entity(blueprint=settings.PORT_REPOSITORY_BLUEPRINT, entity_id=entity_identifier)
+                        
+                        # Retrieve existing mesh relations and append the new team to the existing mesh relations
+                        existing_mesh_relations = repository_entity_data["relations"].get("mesh", [])
+                        existing_mesh_relations.append(mesh_team_entity_identifier)
+                        
+                        # Update the entity data with the new property type and mesh relations
+                        entity_data = {
+                            "properties": {
+                                "type": relation_map[item_type]
+                            },
+                            "relations": {
+                                "mesh": existing_mesh_relations
+                            }
+                        }
 
-                entity_data = {
-                    "properties": {
-                        "type": "library"
-                    },
-                    "relations": {
-                        "mesh": existing_mesh_relations
-                    }
-                }
-                port.update_entity(blueprint=settings.PORT_REPOSITORY_BLUEPRINT, entity_id=service, body=entity_data)
+                        ## Create Snyk and SonarQube relation for each service/library repository
+                        service_integrations = integrations.get(entity_identifier)
+                        if service_integrations:
+                            entity_data["relations"].update(service_integrations)
+                            
+                        # Update the entity with the modified data
+                        port.update_entity(blueprint=settings.PORT_REPOSITORY_BLUEPRINT, entity_id=entity_identifier, body=entity_data, run_id=run_id)
 
         port.update_action(run_id, message, action_status)
-        return {'status': 'SUCCESS'}
+        return {'status': action_status}
 
     return {'status': 'SUCCESS'}
