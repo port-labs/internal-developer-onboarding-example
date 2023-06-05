@@ -29,7 +29,7 @@ async def handle_create_service_webhook(webhook: Webhook):
             "title": properties["meshTeamName"],
             "properties": {},
             "relations": {
-                "maya_group": properties["meshGroup"]
+                "group_name": properties["meshGroup"]
             }
         }
         create_response = port.create_entity(blueprint=settings.PORT_SERVICE_MESH_TEAM_BLUEPRINT, body=entity_data, run_id=run_id)

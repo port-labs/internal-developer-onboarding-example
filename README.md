@@ -67,7 +67,7 @@ $ docker logs -f getport.io-port-idp-webhook-example
 
 1. Create public URL for your local application. 
 
-In this tutorial, we create a new channel in [smee.io](https://smee.io/), and use provided `Webhook Proxy URL`. 
+In this tutorial, we create a new channel in [smee.getport.io](https://smee.getport.io/), and use provided `Webhook Proxy URL`. 
 
 2. Install the Smee client:
 ```
@@ -110,8 +110,8 @@ pysmee forward <SMEE_WEBHOOK_PROXY_URL> http://localhost:80/api/service
   "mirrorProperties": {},
   "calculationProperties": {},
   "relations": {
-    "maya_group": {
-      "title": "Maya Group",
+    "group_name": {
+      "title": "Group Name",
       "target": "mesh_group",
       "required": false,
       "many": false
@@ -203,7 +203,7 @@ pysmee forward <SMEE_WEBHOOK_PROXY_URL> http://localhost:80/api/service
 5. Follow the [Port documentation](https://docs.getport.io/build-your-software-catalog/sync-data-to-catalog/webhook/examples/) to create the necessary blueprints such as `sonarCloudAnalysis`, `snyk_projects` etc.
 
 
-6. Create new actions for blueprint (replace instances of `<WEBHOOK_URL>`):
+6. Create new actions for blueprint (replace instances of `<WEBHOOK_URL>` with your smee proxy URL):
 
 ```
 [
@@ -246,8 +246,8 @@ pysmee forward <SMEE_WEBHOOK_PROXY_URL> http://localhost:80/api/service
           "type": "object",
           "default": {
             "serviceA": {
-              "snyk_project": "SNYK_PROJECT_NAME",
-              "sonar_qube_project": "SONAR_QUBE_PROJECT"
+              "snyk_project": "SNYK_PROJECT__ID",
+              "sonar_qube_project": "SONAR_QUBE_PROJECT_ID"
             }
           },
           "patternProperties": {
@@ -272,7 +272,7 @@ pysmee forward <SMEE_WEBHOOK_PROXY_URL> http://localhost:80/api/service
       "url": "<WEBHOOK_URL>"
     },
     "trigger": "CREATE",
-    "description": "On board your group into Maya's Developer Portal",
+    "description": "On board your group into Organization's Developer Portal",
     "requiredApproval": false
   }
 ]
