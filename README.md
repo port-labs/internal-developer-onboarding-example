@@ -45,7 +45,7 @@ $ docker build -t getport.io/port-idp-webhook-example .
 
 To change the default port (`80`) to `8080` for example, replace command's flags with the following: `-p 80:8080 -e PORT="8080"`
 ```
-$ docker run -d --name getport.io-port-idp-webhook-example -p 80:80 --env-file .env getport.io/getport.io/port-idp-webhook-example
+$ docker run -d --name getport.io-port-idp-webhook-example -p 80:80 --env-file .env getport.io/port-idp-webhook-example
 ```
 
 5. Verify that the Docker container is up and running, and ready to listen for new webhooks:
